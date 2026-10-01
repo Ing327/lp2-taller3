@@ -57,6 +57,8 @@ def cargar_productos():
                 nombre=datos["nombre"],
                 precio=datos["precio"],
                 foto=datos.get("foto"),
+                stock=datos.get("stock", 0),
+                activo=datos.get("activo", True),
                 categoria_id=categoria.id
             )
 

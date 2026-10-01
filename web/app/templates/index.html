@@ -1,45 +1,163 @@
 {% extends "base.html" %}
 
-{% block titulo %}Catálogo - Tienda Virtual{% endblock %}
+{% block titulo %}
+Catálogo de productos
+{% endblock %}
 
 {% block contenido %}
 
-<div class="filtros">
-    <a href="{{ url_for('main.index') }}"
-       class="chip {% if not categoria_id %}chip-activo{% endif %}">Todas</a>
+<h1>Catálogo de productos</h1>
 
-    {# TODO 1: Recorre 'categorias' (lista de dicts que llegó de la API) y
-       genera un enlace por cada una hacia
-       url_for('main.index', categoria=categoria.id). Cada dict tiene
-       'id' y 'nombre', accesibles con categoria.id / categoria.nombre. #}
+<div class="busqueda-sku">
+
+    <form method="GET" action="{{ url_for('main.buscar') }}">
+
+        <label for="sku">
+            Buscar producto por SKU:
+        </label>
+
+        <input
+            type="text"
+            id="sku"
+            name="sku"
+            placeholder="Ejemplo: AUD-001"
+            required
+        >
+
+        <button type="submit" class="boton">
+            Buscar
+        </button>
+
+    </form>
+
 </div>
 
-<div class="catalogo">
+<div class="filtro">
 
-    {# TODO 2: Recorre 'productos' con {% for producto in productos %}.
-       Nota: 'productos' puede llegar como lista vacía si la API no
-       respondió (revisa api_client.py); el template debe soportarlo. #}
+    <form method="GET" action="{{ url_for('main.index') }}">
 
-    {# TODO 3: Dentro del ciclo, muestra cada producto:
+        <label for="categoria">
+            Filtrar por categoría:
+        </label>
 
-        <div class="tarjeta-producto">
-            <img src="{{ url_for('static', filename=producto.foto) }}" alt="{{ producto.nombre }}">
-            <h3>{{ producto.nombre }}</h3>
-            <p>{{ producto.marca }}</p>
-            <p>{{ producto.categoria.nombre }}</p>
-            <p>${{ "{:,.0f}".format(producto.precio) }}</p>
+        <select name="categoria" id="categoria">
 
-            TODO 4: usa producto.disponible para mostrar
-            "Disponible" o "Agotado" con {% if %}/{% else %}
+            <option value="">
+                Todas las categorías
+            </option>
 
-            <a href="{{ url_for('main.detalle', sku=producto.sku) }}">Ver detalle</a>
+            {% for categoria in categorias %}
+
+                <option
+                    value="{{ categoria.id }}"
+                    {% if categoria.id == categoria_seleccionada %}
+                        selected
+                    {% endif %}
+                >
+                    {{ categoria.nombre }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+        <button type="submit" class="boton">
+            Filtrar
+        </button>
+
+        <a
+            href="{{ url_for('main.index') }}"
+            class="boton-secundario"
+        >
+            Mostrar todos
+        </a>
+
+    </form>
+
+</div>
+
+<div class="productos">
+
+    {% for producto in productos %}
+
+        <div class="producto">
+
+            {% if producto.foto %}
+
+                <img
+                    src="{{ url_for('static', filename=producto.foto) }}"
+                    alt="{{ producto.nombre }}"
+                >
+
+            {% else %}
+
+                <div class="sin-imagen">
+                    Sin imagen
+                </div>
+
+            {% endif %}
+
+            <h2>
+                {{ producto.nombre }}
+            </h2>
+
+            <p>
+                <strong>Marca:</strong>
+                {{ producto.marca }}
+            </p>
+
+            <p>
+                <strong>SKU:</strong>
+                {{ producto.sku }}
+            </p>
+
+            <p class="precio">
+                ${{ "{:,.0f}".format(producto.precio) }}
+            </p>
+
+            <p>
+                <strong>Stock:</strong>
+                {{ producto.stock }}
+            </p>
+
+            <p>
+                <strong>Categoría:</strong>
+                {{ producto.categoria.nombre }}
+            </p>
+
+            {% if producto.disponible %}
+
+                <span class="estado disponible">
+                    Disponible
+                </span>
+
+            {% else %}
+
+                <span class="estado agotado">
+                    Agotado
+                </span>
+
+            {% endif %}
+
+            <br>
+
+            <a
+                href="{{ url_for('main.detalle', sku=producto.sku) }}"
+                class="detalle"
+            >
+                Ver detalle
+            </a>
+
         </div>
-    #}
 
-    {# TODO 5: Cierra el ciclo con {% endfor %} #}
+    {% else %}
 
-    {# TODO 6 (opcional): usa {% else %} dentro del for para mostrar un
-       mensaje si 'productos' llega vacía. #}
+        <p>
+            No hay productos para mostrar.
+        </p>
+
+    {% endfor %}
 
 </div>
+
 {% endblock %}

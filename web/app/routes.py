@@ -1,41 +1,76 @@
-"""
-Rutas del frontend.
-
-CAMBIO CLAVE respecto al Taller 2: aquí NO hay consultas ORM
-(Producto.query...). Todo pasa por funciones de api_client, que a su vez
-hacen peticiones HTTP al servicio 'api'. Esta vista Flask solo se encarga
-de pedir datos y renderizar HTML: es un "cliente" de la API, igual que lo
-sería una app móvil o un frontend en React.
-"""
-
-from flask import Blueprint, abort, render_template, request
+from flask import Blueprint, render_template, request
 
 from . import api_client
 
-main = Blueprint("main", __name__)
+
+bp = Blueprint("main", __name__)
 
 
-@main.route("/")
+@bp.route("/")
 def index():
-    categoria_id = request.args.get("categoria", type=int)
+    categoria = request.args.get("categoria", "").strip()
 
-    # TODO 1: productos = api_client.obtener_productos(categoria_id)
-    # TODO 2: categorias = api_client.obtener_categorias()
-    # TODO 3: render_template("index.html", productos=productos,
-    #                         categorias=categorias, categoria_id=categoria_id)
-    pass
+    if categoria:
+        try:
+            categoria_id = int(categoria)
+        except ValueError:
+            categoria_id = None
+    else:
+        categoria_id = None
+
+    productos = api_client.obtener_productos(categoria_id)
+    categorias = api_client.obtener_categorias()
+
+    return render_template(
+        "index.html",
+        productos=productos,
+        categorias=categorias,
+        categoria_seleccionada=categoria_id
+    )
 
 
-@main.route("/producto/<sku>")
+@bp.route("/producto/<sku>")
 def detalle(sku):
-    # TODO 4: producto = api_client.obtener_producto(sku)
-    # TODO 5: si producto es None, abort(404)
-    # TODO 6: render_template("detalle.html", producto=producto)
-    pass
+    producto = api_client.obtener_producto(sku)
+
+    if producto is None:
+        return render_template(
+            "404.html"
+        ), 404
+
+    return render_template(
+        "detalle.html",
+        producto=producto
+    )
 
 
-@main.route("/categorias")
+@bp.route("/categorias")
 def categorias():
-    # TODO 7: categorias = api_client.obtener_categorias()
-    # TODO 8: render_template("categorias.html", categorias=categorias)
-    pass
+    categorias = api_client.obtener_categorias()
+
+    return render_template(
+        "categorias.html",
+        categorias=categorias
+    )
+
+
+@bp.route("/buscar")
+def buscar():
+    sku = request.args.get("sku", "").strip()
+
+    if not sku:
+        return render_template(
+            "404.html"
+        ), 404
+
+    producto = api_client.obtener_producto(sku)
+
+    if producto is None:
+        return render_template(
+            "404.html"
+        ), 404
+
+    return render_template(
+        "detalle.html",
+        producto=producto
+    )
